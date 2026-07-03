@@ -112,9 +112,17 @@ function ensureSession(ch) {
 
   const args = [
     '-loglevel', 'error',
-    '-fflags', 'nobuffer',
+    // Probe long enough to reliably detect the audio stream (FLV audio packets
+    // often arrive after the first video packets). Without this ffmpeg can
+    // finalize the input as video-only and silently drop the audio.
+    '-analyzeduration', '5000000',
+    '-probesize', '5000000',
     '-rw_timeout', '15000000', // 15s upstream read timeout (microseconds)
     '-i', ch.url,
+    // Explicitly take the first video + first audio (optional, won't fail if
+    // a source genuinely has no audio).
+    '-map', '0:v:0',
+    '-map', '0:a:0?',
     ...videoArgs,
     // MP3 -> AAC for iOS; aresample keeps audio locked to the video clock so it
     // can't drift out of sync over a long session.
