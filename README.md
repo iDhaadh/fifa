@@ -84,9 +84,22 @@ Copy `config.example.json` to `config.json` and edit:
 }
 ```
 
-Restart after editing. `id` must be URL-safe and unique; `url` is the raw FLV
-stream. Changing `password` instantly logs everyone out (the cookie is an HMAC
-of the password).
+Restart after editing. `id` must be URL-safe and unique. Changing `password`
+instantly logs everyone out (the cookie is an HMAC of the password).
+
+**Channel `url` can be anything ffmpeg can read**, including:
+
+- **HTTP-FLV:** `http://192.168.40.65:8080`
+- **UDP multicast:** `udp://239.2.4.2:1234?localaddr=<your-NIC-ip>&overrun_nonfatal=1&fifo_size=5000000&reuse=1`
+  — `localaddr` binds the multicast join to the interface facing the source
+  (e.g. the `ens18`/`172.16.10.x` NIC). No `@` — that's VLC syntax, not ffmpeg.
+- **RTSP:** `rtsp://user:pass@host:554/stream`
+
+The app spawns one ffmpeg per channel on demand (joins the source when a viewer
+opens it, leaves ~30s after the last viewer). For **MPEG-2** sources (common on
+TV headends) browsers can't play the video, so set `"lowLatency": true` on that
+setup to transcode to H.264. **H.264** sources stay on the default copy mode
+(no CPU).
 
 ## 3. Expose it publicly with Cloudflare Tunnel
 
