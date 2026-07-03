@@ -2,6 +2,9 @@
 Description=Channel Gateway (in-house channels -> browser, HLS)
 After=network-online.target
 Wants=network-online.target
+# Don't crash-loop forever on a config error.
+StartLimitIntervalSec=60
+StartLimitBurst=10
 
 [Service]
 Type=simple
@@ -11,9 +14,6 @@ WorkingDirectory=/opt/channel-gateway
 ExecStart=/usr/bin/node server.js
 Restart=always
 RestartSec=3
-# Don't spam the journal if it crash-loops on a config error.
-StartLimitIntervalSec=60
-StartLimitBurst=10
 
 [Install]
 WantedBy=multi-user.target
