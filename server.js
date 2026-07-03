@@ -110,6 +110,19 @@ function ensureSession(ch) {
   const hlsTime = '2';
   const hlsList = lowLatency ? '5' : '6';
 
+  // audioCopy:true passes AAC through bit-perfect (no re-encode). Only safe when
+  // the source audio is already AAC (browsers/iOS need AAC). Default false =
+  // transcode to AAC, which works for any source (MP3, AC3, MP2, …).
+  const audioCopy =
+    ch.audioCopy !== undefined ? ch.audioCopy : !!config.audioCopy;
+  const audioArgs = audioCopy
+    ? ['-c:a', 'copy']
+    : [
+        // aresample keeps audio locked to the video clock so it can't drift.
+        '-c:a', 'aac', '-ac', '2', '-b:a', '128k',
+        '-af', 'aresample=async=1:min_hard_comp=0.100:first_pts=0',
+      ];
+
   const args = [
     '-loglevel', 'error',
     // Probe long enough to reliably detect the audio stream (FLV audio packets
@@ -124,10 +137,7 @@ function ensureSession(ch) {
     '-map', '0:v:0',
     '-map', '0:a:0?',
     ...videoArgs,
-    // MP3 -> AAC for iOS; aresample keeps audio locked to the video clock so it
-    // can't drift out of sync over a long session.
-    '-c:a', 'aac', '-ac', '2', '-b:a', '128k',
-    '-af', 'aresample=async=1:min_hard_comp=0.100:first_pts=0',
+    ...audioArgs,
     '-max_muxing_queue_size', '1024',
     '-f', 'hls',
     '-hls_time', hlsTime,

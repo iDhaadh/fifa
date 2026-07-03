@@ -5,6 +5,7 @@
   "title": "In-House Channels",
   "lowLatency": false,
   "keepWarm": true,
+  "audioCopy": false,
   "channels": [
     { "id": "ch1", "name": "HTTP-FLV example", "url": "http://192.168.40.65:8080" },
     { "id": "ch2", "name": "UDP multicast example", "url": "udp://239.2.4.2:1234?localaddr=172.16.10.156&overrun_nonfatal=1&fifo_size=5000000&reuse=1" }
