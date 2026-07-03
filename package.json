@@ -1,0 +1,14 @@
+{
+  "name": "channel-gateway",
+  "version": "1.0.0",
+  "description": "Public, full-screen browser viewer for in-house HTTP-FLV channels, behind an unguessable URL.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "new-token": "node -e \"console.log(require('crypto').randomBytes(24).toString('base64url'))\""
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

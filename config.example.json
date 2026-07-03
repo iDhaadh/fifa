@@ -1,0 +1,10 @@
+{
+  "port": 8090,
+  "password": "change-me",
+  "cookieSecret": "run: node -e \"console.log(require('crypto').randomBytes(24).toString('base64url'))\"",
+  "title": "In-House Channels",
+  "lowLatency": false,
+  "channels": [
+    { "id": "ch1", "name": "Channel 1", "url": "http://192.168.40.65:8080" }
+  ]
+}

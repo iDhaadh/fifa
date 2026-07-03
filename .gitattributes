@@ -1,0 +1,10 @@
+# Keep Linux shell scripts and unit files as LF so they run on the server.
+*.sh        text eol=lf
+*.service   text eol=lf
+
+# Windows helpers stay CRLF.
+*.bat       text eol=crlf
+*.vbs       text eol=crlf
+
+# Everything else: normalized text.
+*           text=auto

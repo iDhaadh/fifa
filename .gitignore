@@ -1,0 +1,13 @@
+# Secrets & runtime — never commit these
+config.json
+server.log
+
+# Dependencies
+node_modules/
+
+# HLS scratch output (if ever written locally)
+.hls/
+
+# OS junk
+Thumbs.db
+.DS_Store
