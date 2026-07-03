@@ -140,17 +140,22 @@ function ensureSession(ch) {
     if (code) console.error(`[ffmpeg ${ch.id}] exited ${code}: ${errBuf.trim()}`);
   });
 
-  s = { proc, dir, lastAccess: Date.now() };
+  // "Warm" channels keep ffmpeg running so viewers start almost instantly
+  // instead of waiting for a cold start. Set per-channel `keepWarm` or the
+  // global `keepWarm` in config.json.
+  const keepWarm = ch.keepWarm !== undefined ? ch.keepWarm : !!config.keepWarm;
+
+  s = { proc, dir, lastAccess: Date.now(), keepWarm };
   sessions.set(ch.id, s);
-  console.log(`[hls] started ffmpeg for ${ch.id}`);
+  console.log(`[hls] started ffmpeg for ${ch.id}${keepWarm ? ' (keepWarm)' : ''}`);
   return s;
 }
 
-// Reap idle ffmpeg processes.
+// Reap idle ffmpeg processes (but never the warm ones).
 setInterval(() => {
   const now = Date.now();
   for (const [id, s] of sessions) {
-    if (now - s.lastAccess > IDLE_MS) {
+    if (!s.keepWarm && now - s.lastAccess > IDLE_MS) {
       console.log(`[hls] stopping idle ffmpeg for ${id}`);
       try { s.proc.kill('SIGKILL'); } catch (_) {}
       sessions.delete(id);
@@ -158,6 +163,17 @@ setInterval(() => {
     }
   }
 }, 10000).unref();
+
+// Restart any warm channel whose ffmpeg died (e.g. brief source hiccup).
+setInterval(() => {
+  for (const ch of config.channels) {
+    const warm = ch.keepWarm !== undefined ? ch.keepWarm : !!config.keepWarm;
+    if (warm && !sessions.has(ch.id)) {
+      console.log(`[hls] re-warming ${ch.id}`);
+      ensureSession(ch);
+    }
+  }
+}, 5000).unref();
 
 // Wait (up to timeoutMs) for ffmpeg to produce a file on first hit.
 function waitForFile(fp, timeoutMs) {
@@ -285,6 +301,11 @@ app.listen(config.port, () => {
   console.log(`Channel Gateway listening on http://localhost:${config.port}`);
   console.log(`ffmpeg: ${FFMPEG}`);
   console.log(`Open locally:  http://localhost:${config.port}/  (password protected)`);
+  // Pre-warm channels so the first viewer doesn't wait for a cold start.
+  for (const ch of config.channels) {
+    const warm = ch.keepWarm !== undefined ? ch.keepWarm : !!config.keepWarm;
+    if (warm) ensureSession(ch);
+  }
 });
 
 process.on('SIGINT', () => {
