@@ -397,6 +397,11 @@ function playerPage(ch) {
   #name{font-weight:600;margin-right:auto}
   #msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
        text-align:center;padding:24px;color:#8b949e;pointer-events:none}
+  #unmute{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);z-index:6;
+          display:none;align-items:center;gap:8px;padding:12px 18px;border-radius:24px;
+          background:#238636;border:0;color:#fff;font-size:15px;font-weight:600;cursor:pointer;
+          box-shadow:0 4px 14px #0008}
+  #unmute:hover{background:#2ea043}
 </style></head><body>
 <div id="wrap">
   <div id="bar">
@@ -406,15 +411,33 @@ function playerPage(ch) {
   </div>
   <video id="v" autoplay muted playsinline controls></video>
   <div id="msg">Loading…</div>
+  <button id="unmute">🔊 Tap for sound</button>
 </div>
 <script src="${HLS_JS}"></script>
 <script>
 (function(){
   var video=document.getElementById('v'), msg=document.getElementById('msg'),
-      bar=document.getElementById('bar'), wrap=document.getElementById('wrap');
+      bar=document.getElementById('bar'), wrap=document.getElementById('wrap'),
+      unmuteBtn=document.getElementById('unmute');
   var url='${src}';
   function show(t){ msg.textContent=t; msg.style.display=t?'flex':'none'; }
   video.addEventListener('playing',function(){ show(''); });
+
+  // Autoplay must start muted; offer a one-tap unmute and unmute on any gesture.
+  function unmute(){
+    video.muted=false; video.volume=1;
+    video.play().catch(function(){});
+    unmuteBtn.style.display='none';
+  }
+  function updateUnmuteBtn(){ unmuteBtn.style.display=video.muted?'flex':'none'; }
+  unmuteBtn.addEventListener('click',function(e){ e.stopPropagation(); unmute(); });
+  video.addEventListener('playing',updateUnmuteBtn);
+  video.addEventListener('volumechange',updateUnmuteBtn);
+  // First real interaction anywhere unmutes (covers the common case).
+  ['pointerdown','keydown'].forEach(function(ev){
+    document.addEventListener(ev,function h(){ if(video.muted) unmute();
+      document.removeEventListener(ev,h); });
+  });
 
   function startNative(){ video.src=url; video.play().catch(function(){}); }
 
